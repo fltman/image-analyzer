@@ -1,0 +1,45 @@
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.dropzone {
+  border: 2px dashed #cccccc;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin: 20px 0;
+  transition: border 0.3s ease;
+}
+
+.dropzone:hover {
+  border-color: #666666;
+}
+
+.loading {
+  text-align: center;
+  margin: 20px 0;
+  font-style: italic;
+}
+
+.analysis {
+  margin-top: 30px;
+}
+
+.result-card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.result-card h3 {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.result-card p {
+  margin: 5px 0;
+} 
