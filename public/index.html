@@ -49,14 +49,6 @@
         
         <div class="space-y-4">
             <div>
-                <label for="ratingPreferences" class="block text-sm font-medium mb-2">Rating Preferences</label>
-                <textarea id="ratingPreferences" 
-                    class="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-dark-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                    placeholder="E.g., 'Consider composition, lighting, and technical quality'"
-                >Rate based on artistic composition, technical quality, lighting, and overall visual impact</textarea>
-            </div>
-
-            <div>
                 <label for="toneInstruction" class="block text-sm font-medium mb-2">Description Tone</label>
                 <textarea id="toneInstruction" 
                     class="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-dark-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
@@ -135,22 +127,17 @@
         const menuButton = document.getElementById('menuButton');
         const settingsPanel = document.getElementById('settings');
         const overlay = document.getElementById('overlay');
-        const ratingPreferences = document.getElementById('ratingPreferences');
 
         // Load saved settings from localStorage
         window.addEventListener('load', () => {
             const savedTone = localStorage.getItem('toneInstruction');
             const savedLanguage = localStorage.getItem('keywordLanguage');
-            const savedRatingPrefs = localStorage.getItem('ratingPreferences');
             
             if (savedTone) {
                 toneInstruction.value = savedTone;
             }
             if (savedLanguage) {
                 keywordLanguage.value = savedLanguage;
-            }
-            if (savedRatingPrefs) {
-                ratingPreferences.value = savedRatingPrefs;
             }
         });
 
@@ -170,15 +157,6 @@
 
         keywordLanguage.addEventListener('input', () => {
             localStorage.setItem('keywordLanguage', keywordLanguage.value);
-        });
-
-        // Save rating preferences when changed
-        ratingPreferences.addEventListener('change', () => {
-            localStorage.setItem('ratingPreferences', ratingPreferences.value);
-        });
-
-        ratingPreferences.addEventListener('input', () => {
-            localStorage.setItem('ratingPreferences', ratingPreferences.value);
         });
 
         // Handle drag and drop
@@ -288,16 +266,18 @@
 
         async function handleMultipleUploads(files) {
             const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';
             loading.style.display = 'block';
 
             // Convert FileList to Array for easier handling
             const fileArray = Array.from(files);
 
+            // Get the current number of results to use as a starting index
+            const startIndex = resultsContainer.children.length;
+
             // Process all files concurrently
             const uploadPromises = fileArray.map(async (file, index) => {
                 // Create a placeholder for this result
-                const resultId = `result-${index}`;
+                const resultId = `result-${startIndex + index}`;
                 const resultCard = document.createElement('div');
                 resultCard.id = resultId;
                 resultCard.className = 'bg-white dark:bg-dark-200 rounded-lg p-6 shadow-lg';
@@ -308,14 +288,14 @@
                         <div class="h-4 bg-gray-200 dark:bg-dark-300 rounded w-1/2"></div>
                     </div>
                 `;
-                resultsContainer.appendChild(resultCard);
+                // Insert new result card at the beginning of the container
+                resultsContainer.insertBefore(resultCard, resultsContainer.firstChild);
 
                 try {
                     const formData = new FormData();
                     formData.append('image', file);
                     formData.append('toneInstruction', toneInstruction.value);
                     formData.append('keywordLanguage', keywordLanguage.value);
-                    formData.append('ratingPreferences', ratingPreferences.value);
                     formData.append('ratingCategories', JSON.stringify(getRatingCategories()));
 
                     const response = await fetch('/analyze', {
@@ -333,9 +313,9 @@
                     // Update the placeholder with actual content
                     resultCard.innerHTML = `
                         <div class="flex flex-col gap-4">
-                            <div class="relative group cursor-pointer" id="thumbnailContainer-${index}">
-                                <img src="${imageUrl}" alt="Analyzed image ${index + 1}" 
-                                    class="w-full h-48 object-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
+                            <div class="relative group cursor-pointer aspect-square" id="thumbnailContainer-${startIndex + index}">
+                                <img src="${imageUrl}" alt="Analyzed image ${startIndex + index + 1}" 
+                                    class="w-full h-full object-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-200 rounded-lg flex items-center justify-center">
                                     <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -389,7 +369,7 @@
                                     </div>
                                 ` : ''}
                                 <button class="export-btn w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm" 
-                                        data-index="${index}"
+                                        data-index="${startIndex + index}"
                                         data-metadata='${JSON.stringify(data)}'>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -401,7 +381,7 @@
                     `;
 
                     // Add click handler for the thumbnail
-                    const thumbnailContainer = document.getElementById(`thumbnailContainer-${index}`);
+                    const thumbnailContainer = resultCard.querySelector(`[id^="thumbnailContainer-"]`);
                     const imageOverlay = document.getElementById('imageOverlay');
                     const fullImage = document.getElementById('fullImage');
                     const closeImageOverlay = document.getElementById('closeImageOverlay');
